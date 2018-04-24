@@ -1,0 +1,13 @@
+version: 1.5.2
+apkFileName: jacekpaciorek-mapyapk
+isFrameworkApk: false
+usesFramework:
+  ids:
+  - 1
+sdkInfo:
+  minSdkVersion: '7'
+  targetSdkVersion: '18'
+packageInfo:
+  cur_package: com.paciorek.mapy
+  orig_package: com.paciorek.mapy
+compressionType: false

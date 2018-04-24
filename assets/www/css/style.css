@@ -1,0 +1,182 @@
+@import url('http://fonts.googleapis.com/css?family=Chewy');
+
+body {
+    overflow: hidden;
+    padding: 0;
+    color: #36ff00;
+}
+
+#myTrips {
+    margin: 20px 0 0 0;
+}
+
+
+#streetView {
+    display: none;
+    position: absolute;
+    width: 100%;
+}
+
+
+
+#page1 {
+    background-color: #010243 !important;
+    position: absolute;
+    width: 100%;
+    z-index: 9999;
+    height: 100%;
+}
+
+    #page1 #logo {
+        width: 300px;
+        height: 300px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin-top: -150px;
+        margin-left: -150px;
+    }
+
+#pn1 {
+    font-size: 30px;
+    position: absolute;
+    right: 5%;
+    top: 15px;
+}
+
+#pn2 {
+    font-size: 30px;
+    position: absolute;
+    right: 10%;
+    top: 15px;
+}
+
+#mapDiv {
+    overflow: hidden;
+}
+
+#pn3 {
+    font-size: 30px;
+    position: absolute;
+    right: 15%;
+    top: 15px;
+}
+
+#dupa {
+    margin: 0px;
+    padding: 0px;
+}
+
+
+#pn5 {
+    font-size: 30px;
+    position: absolute;
+    right: 20%;
+    top: 15px;
+}
+
+#closeApp {
+    font-size: 30px;
+    position: absolute;
+    left: 5%;
+    top: 15px;
+}
+
+#header {
+    overflow: hidden;
+    color: #36ff00;
+    position: relative;
+}
+
+.ui-content {
+    padding: 0px;
+}
+
+#header h1 {
+    text-align:center;
+    padding: 15px 0;
+    margin: 0 auto;
+    color: #36ff00;
+    font-family: 'Chewy';
+    font-size: 1.5em;
+    letter-spacing: 2px;
+}
+
+#myList {
+    max-height: 300px;
+    overflow-x: hidden;
+    margin-bottom: 10px;
+}
+
+#kolornik {
+    height: 130px;
+    color: #36ff00;
+    text-align: center;
+    padding: 20px;
+    background: #010243;
+    border-radius: 0px !important;
+    font-family: 'Chewy';
+    font-size: 1.3em;
+    font-kerning: auto;
+    letter-spacing: 2px;
+}
+
+.kolor {
+    float: left;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin: 10px 10px;
+    display: block;
+}
+
+#red {
+    background-color: red;
+}
+
+#blue {
+    background-color: blue;
+}
+
+#green {
+    background-color: green;
+}
+
+#yellow {
+    background-color: yellow;
+}
+
+#lime {
+    background-color: lime;
+}
+
+#black {
+    background-color: black;
+}
+
+#violet {
+    background-color: violet;
+}
+
+#white {
+    background-color: white;
+}
+
+#aqua {
+    background-color: aqua;
+}
+
+
+.icons {
+    width: 35px;
+}
+
+.ui-bar-b {
+    background: #010243 !important;
+    color: #36ff00;
+    /*border: 1px solid #E82C0C !important;*/
+}
+
+.ui-title {
+    color: #36ff00;
+}

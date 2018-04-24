@@ -1,0 +1,855 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+    <!--<link rel="stylesheet" type="text/css" href="css/index.css" />-->
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.2/jquery.mobile-1.3.2.min.css" />
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.3.2/jquery.mobile-1.3.2.min.js"></script>
+    <script src="http://maps.google.com/maps/api/js?sensor=false&language=pl"></script>
+    <link href='http://fonts.googleapis.com/css?family=Chewy' rel='stylesheet' type='text/css'>
+    <script src='jquery.transit.js'></script>
+    <script type="text/javascript" src="gmap/gmap3.min.js"></script>
+    <title>MyTrips</title>
+</head>
+<body>
+    <div id="page1">
+        <div id="logo">
+            <img id="img1" src="img/icon.png">
+        </div>
+    </div>
+    <div data-role="page" id="page2">
+        <div id="panel1" data-display="overlay" data-role="panel">
+            <ul id="myList" data-role="listview"></ul>
+            <hr />
+            <button id="btn3" data-icon="check">NARYSUJ TRASĘ</button>
+            <hr />
+
+            <button id="b4" data-icon="forward">WYŚLIJ DANE NA SERWER</button><hr />
+
+            <button id="b5" data-icon="alert">WYCZYŚC MAPĘ I DANE</button><hr />
+            <label> STREETVIEW<input type="checkbox" id="pn4" /></label><hr />
+
+            <label>DŁUGOŚC GEOGRAFICZNA<input id="r1" type="range" min="-90" max="90" value="0" /></label>
+            <label>SZEROKOŚC GEOGRAFICZNA<input id="r2" type="range" min="-180" max="180" value="0" /></label>
+            <label>PRZYBLIŻENIE<input id="r3" type="range" min="0" max="6" value="3" /></label>
+
+</div>
+        <div id="panel2" data-display="overlay" data-role="panel">
+            <button id="btn5" data-icon="refresh">ODŚWIEŻ LISTĘ WYCIECZEK</button>
+            <ul id="myTrips" data-role="listview"></ul>
+        </div>
+        <!--HEADER-->
+        <div id="header" data-role="header" data-theme="b">
+            <h1>MyTrips</h1>
+            <div id="closeApp"><img src="img/close.png" class="icons" /></div>
+            <div id="pn5"><img src="img/navi.png" class="icons"></div>
+            <div id="pn1"><img src="img/settings.png" class="icons"></div>
+            <div id="pn2"><img src="img/color.png" class="icons"></div>
+            <div id="pn3"><img src="img/road.png" class="icons"></div>
+        </div>
+        <!--KOLORNIK -->
+        <div id="kolornik" data-display="overlay" data-role="popup" data-transition="slidefade">
+            <div id="kolornik_header">
+                <p>KOLORNIK:</p>
+                <div class="kolor" id="red"></div>
+                <div class="kolor" id="blue"></div>
+                <div class="kolor" id="green"></div>
+                <div class="kolor" id="yellow"></div>
+                <div class="kolor" id="lime"></div>
+                <div class="kolor" id="black"></div>
+                <div class="kolor" id="violet"></div>
+                <div class="kolor" id="white"></div>
+                <div class="kolor" id="aqua"></div>
+            </div>
+        </div>
+        <div id="dupa" data-role="content">
+            <div id="mapDiv">
+            </div>
+        </div>
+
+    </div>
+    <script type="text/javascript" src="cordova.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#logo").css("left", "50%");
+            $("#logo").css("margin-left", "-64px");
+            ls = window.localStorage;
+            WeightP = 2;
+            tab = [];
+            openSV = false;
+            nrmiejsca = 1;
+            rozmiescmarkery();
+            szerEkranu = $(window).width();
+            wysEkranu = $(window).height();
+            fidle = (wysEkranu / 2);
+            przesun = (szerEkranu * 0.5) - 150;
+            var zaladowano = false;
+            $("#mapDiv").gmap3({
+                map: {
+                    events: {
+                        tilesloaded: function () {
+                            init();
+                        }
+                    },
+                    options: {
+                        latLng: [50.333, 20.444],
+                        zoom: 3,
+                        disableDefaultUI: true,
+                        streetViewControl: true
+
+                    }
+                },
+                streetviewpanorama: {
+                    options: {
+                        container: $(document.createElement("div")).addClass("googlemap").attr("id", "streetView").insertAfter($("#mapDiv")),
+                        opts: {
+                            position: [50.333, 20.444],
+                            pov: {
+                                heading: 4,
+                                pitch: 5,
+                                zoom: 1
+                            }
+                        },
+
+                    }
+                }
+            });
+
+
+
+            Color = "black";
+            function init() {
+                //$("#logo").css("left", "50%");
+                //$("#logo").css("margin-left", "-64px");
+
+                if (szerEkranu < 820) {
+                    $("#header h1").html("test");
+                    $("#header h1").css({ "text-align": "left", "margin-left": "20px" });
+                    $("mapDiv").css({ "height": fidle + "px", "top": "-50px" });
+                }
+
+                $("#streetView").height(fidle + 48 + "px");
+
+                //$("#logo").css("left", "50%");
+                //$("#logo").css("margin-left", "-64px");
+                $("#logo").addClass("startMap");
+
+
+            }
+
+            $("#page1").on("click", ".startMap", function () {
+                navigator.notification.vibrate(300);
+                //transitioon---------------------bugiiiiiii-----
+                $("#logo")
+                    .css({ transformOrigin: '100px' })
+                    .transition({
+                        perspective: '100px',
+                        rotateY: '360deg'
+                    });
+                //ANIMACJAJAAAAAAAAAAAAAAAAAAAAAAAAAA-------------w razie bugow usunac toggla----------------
+                setTimeout(function () {
+                    $("#page1").animate({
+                        height: 'toggle'
+                    });
+                }, 1000);
+
+                setTimeout(function () {
+                    $("#page1").css("display", "none");
+                }, 2000);
+            });
+            $("#mapDiv").height(wysEkranu + "px");
+            $("#mapDiv").gmap3();
+
+            $("#r3").change(function () {
+                var z = parseInt($("#r3").val());
+                $("#mapDiv").gmap3({
+                    map: {
+                        options: {
+                            zoom: z,
+
+                        },
+                    }
+                })
+
+            });
+
+            $("#r1").change(function () {
+                var x = $("#r1").val();
+                var y = $("#r2").val();
+                var z = $("#r3").val();
+                $("#mapDiv").gmap3({
+                    map: {
+                        options: {
+                            center: [x, y],
+
+
+                        },
+                    }
+                })
+
+            });
+            $("#r2").change(function () {
+                var x = $("#r1").val();
+                var y = $("#r2").val();
+                var z = $("#r3").val();
+                $("#mapDiv").gmap3({
+                    map: {
+                        options: {
+                            center: [x, y],
+
+                        },
+
+                    }
+                })
+
+            });
+
+            $("#mapDiv").gmap3({
+                map: {
+                    events: {
+                        click: function (map, event) {
+
+                            var szer = event.latLng.lat();
+                            var wys = event.latLng.lng();
+                            var zoom = $("#r3").val();
+                            tab.push({ lat: szer, lng: wys, zoom: zoom });
+                            $("#mapDiv").gmap3({
+                                marker: {
+                                    option: {
+                                        draggable: true
+                                    },
+                                    latLng: [szer, wys],
+                                    zoom: zoom,
+                                }
+
+                            });
+                            var obj = JSON.stringify({ lat: event.latLng.lat(), lng: event.latLng.lng(), zoom: map.getZoom() });
+                            ls.setItem(nrmiejsca, obj);
+
+                            $("#myList").append('<li><a class="xxx">miejsce' + nrmiejsca + '</a><a class="usun" data-icon="delete"></a></li>');
+                            $("#myList").listview("refresh");
+                            nrmiejsca++;
+
+
+                        }
+                    }
+                }
+            });
+            $("#myList").on("click", ".xxx", function () {
+                var xyz = $(this).parent().parent().parent().index();
+                $("#mapDiv").gmap3({
+                    map: {
+                        options: {
+                            center: [tab[xyz].lat, tab[xyz].lng],
+
+
+                        }
+                    },
+                    streetviewpanorama: {
+                        options: {
+                            container: $("#streetView"),
+                            opts: {
+                                position: [tab[xyz].lat, tab[xyz].lng],
+                                pov: {
+                                    heading: 4,
+                                    pitch: 5,
+                                    zoom: 1
+                                }
+                            },
+
+                        }
+                    }
+
+
+
+                })
+
+            });
+            $("#btn3").click(function () {
+                $("#mapDiv").gmap3({
+                    polyline: {
+                        options: {
+                            strokeColor: Color,
+                            strokeOpacity: 0.8,
+                            strokeWeight: WeightP,
+                            path: tab
+                        }
+                    }
+                })
+            });
+            $("#myList").on("click", ".usun", function () {
+                var index = $(this).parent().index();
+                var xyz = $(this).parent();
+                xyz.remove();
+                ls.clear();
+                nrmiejsca--;
+                tab.splice(index, 1);
+                $("#myList").html("");
+                setmarker();
+                for (var i = 0; i < tab.length; i++) {
+                    $("#myList").append('<li><a class="xxx">miejsce' + (i + 1) + '</a><a class="usun" data-icon="minus"></a></li>');
+                    $("#myList").listview("refresh");
+                    var obj = JSON.stringify({ lat: tab[i].lat, lng: tab[i].lng, zoom: tab[i].zoom });
+                    ls.setItem(i + 1, obj);
+                    $("#mapDiv").gmap3({
+                        marker: {
+                            option: {
+                                draggable: true
+                            },
+                            latLng: [tab[i].lat, tab[i].lgn],
+                            zoom: tab[i].zoom,
+                        }
+
+                    });
+                }
+
+            });
+            function rozmiescmarkery() {
+                var il = ls.length;
+                for (var i = 0; i < il; i++) {
+                    $("#myList").append('<li><a class="xxx">miejsce' + (i + 1) + '</a><a class="usun" data-icon="minus"></a></li>');
+                    $("#myList").listview("refresh");
+                    lat = JSON.parse(ls.getItem(i + 1)).lat;
+                    lng = JSON.parse(ls.getItem(i + 1)).lng;
+                    zoom = JSON.parse(ls.getItem(i + 1)).zoom;
+                    tab[i] = { lat: lat, lng: lng, zoom: zoom };
+                    setmarker();
+                    nrmiejsca++;
+
+                }
+
+
+            };
+            function setmarker() {
+                $("#mapDiv").gmap3("clear");
+                $("#mapDiv").gmap3({
+                    marker: {
+
+                        options: {
+                            draggable: true
+                        },
+                        values: tab
+                    }
+                })
+            }
+
+            $("#pn1").click(function () {
+                var open1 = false;
+                if (open1 == false) $("#panel1").panel("open");
+                else
+                    $("#panel1").panel("close");
+
+            });
+
+            $("#closeApp").click(function () {
+                navigator.app.exitApp();
+            });
+            allTripsOnServer = "";
+            $("#pn3").click(function () {
+                var open1 = false;
+                if (open1 == false) $("#panel2").panel("open");
+                else
+                    $("#panel2").panel("close");
+
+            });
+            $("#pn5").click(function () {
+                getPosition();
+
+            });
+            function getPosition() {
+                navigator.geolocation.getCurrentPosition(onSuccesGPS, onErrorGPS, geoOptions);
+            }
+            function onSuccesGPS(position) {
+                var lon = position.coords.longitude;
+                var lat = position.coords.latitude;
+
+                $("#mapDiv").gmap3({
+                    map: {
+                        options: {
+                            center: [lat, lon],
+                            zoom: 18
+
+                        },
+                    }
+                })
+                $("#mapDiv").gmap3({
+                    marker: {
+                        option: {
+                            draggable: false
+                        },
+                        latLng: [lat, lon],
+                    }
+                })
+
+
+
+            }
+            //error
+            function onErrorGPS(error) {
+                alert("błąd " + error.code);
+            }
+            // geoOptions
+
+            var geoOptions = {
+                maximumAge: 3000,
+                timeout: 5000,
+                enableHighAccuracy: true
+            }
+
+            $("#pn4").click(function () {
+                if (!openSV) {
+                    $("#streetView").css({ "display": "block" });
+                    $("#mapDiv").animate({ height: fidle + "px" }, 1000);
+                    openSV = true;
+                }
+                else {
+                    $("#streetView").css({ "display": "none" });
+                    $("#mapDiv").animate({ height: wysEkranu - 50 + "px" }, 1000);
+                    openSV = false;
+                }
+
+            });
+            $("#btn5").click(function () {
+                readTrips();
+            });
+            function readTrips() {
+                $.ajax({
+                    type: "POST",
+                    dataType: "text",
+                    url: "http://3ib2.spec.pl.hostingasp.pl/Paciorek_Jacek/MyTrips/PobierzPlik.aspx",
+                    success: OnSuccess,
+                    error: function (xhr) {
+                        alert(xhr.responseText);
+                    }
+
+
+                });
+
+            };
+            function OnSuccess(response) {
+                allTripsOnServer = JSON.parse(response);
+                $("#myTrips").html("");
+                var ilosc = allTripsOnServer.length;
+                for (var i = 0; i < ilosc; i++) {
+                    $("#myTrips").append('<li><a class="trip">' + allTripsOnServer[i][0] + " | " + allTripsOnServer[i][2] + '</a></li>');
+                    $("#myTrips").listview("refresh");
+                    makeItGood(i);
+                }
+
+
+            }
+            tabTrip = []
+            function makeItGood(i) {
+                var ilosc = allTripsOnServer.length;
+                tabPom = [];
+                pom = allTripsOnServer[i];
+                pom2 = pom.splice(0, 3);
+
+                for (var x = 0; x < pom.length; x++) {
+                    tabPom.push({ lat: pom[x][0], lng: pom[x][1], zoom: parseInt(pom[x][2]) });
+                }
+                tabTrip[i] = { color: pom2[1], punkty: tabPom };
+
+            }
+            $("#myTrips").on("click", ".trip", function () {
+                var index = $(this).parent().parent().parent().index();
+                $("#mapDiv").gmap3({
+                    marker: {
+
+                        options: {
+                            draggable: true
+                        },
+                        values: tabTrip[index].punkty
+                    }
+                })
+
+                $("#mapDiv").gmap3({
+                    polyline: {
+                        options: {
+                            strokeColor: tabTrip[index].color,
+                            strokeOpacity: 1.0,
+                            strokeWeight: 2,
+                            path: tabTrip[index].punkty
+
+                        }
+                    },
+                    autofit: {}
+
+                })
+
+            })
+
+            $("#b5").click(function () {
+                navigator.notification.vibrate(500);
+                odp = confirm("CZY NA PEWNO CHCESZ USUNĄC DANE?");
+                if (odp) {
+                    tab = [];
+                    $("#mapDiv").gmap3("clear");
+                    $("#myList").html("");
+                    ls.clear();
+                    nrmiejsca = 1;
+                }
+                navigator.notification.alert("DANE USUNIĘTE", null, "Uwaga!", "OK");
+
+            })
+
+
+            $("#r4").change(function () {
+                WeightP = $("#r4").val();
+
+            })
+            $("#pn2").click(function () {
+                $("#kolornik").popup("open");
+            })
+
+            var Color;
+            $("#red").click(function () {
+                Color = "red";
+                $("#red").css("width", "60px");
+                $("#red").css("height", "60px");
+
+                $("#blue").css("width", "40px");
+                $("#blue").css("height", "40px");
+
+                $("#green").css("width", "40px");
+                $("#green").css("height", "40px");
+
+                $("#yellow").css("width", "40px");
+                $("#yellow").css("height", "40px");
+
+                $("#lime").css("width", "40px");
+                $("#lime").css("height", "40px");
+
+                $("#black").css("width", "40px");
+                $("#black").css("height", "40px");
+
+                $("#violet").css("width", "40px");
+                $("#violet").css("height", "40px");
+
+                $("#white").css("width", "40px");
+                $("#white").css("height", "40px");
+
+                $("#aqua").css("width", "40px");
+                $("#aqua").css("height", "40px");
+
+
+
+
+            })
+            $("#blue").click(function () {
+                Color = "blue";
+                $("#red").css("width", "40px");
+                $("#red").css("height", "40px");
+
+                $("#blue").css("width", "60px");
+                $("#blue").css("height", "60px");
+
+                $("#green").css("width", "40px");
+                $("#green").css("height", "40px");
+
+                $("#yellow").css("width", "40px");
+                $("#yellow").css("height", "40px");
+
+                $("#lime").css("width", "40px");
+                $("#lime").css("height", "40px");
+
+                $("#black").css("width", "40px");
+                $("#black").css("height", "40px");
+
+                $("#violet").css("width", "40px");
+                $("#violet").css("height", "40px");
+
+                $("#white").css("width", "40px");
+                $("#white").css("height", "40px");
+
+                $("#aqua").css("width", "40px");
+                $("#aqua").css("height", "40px");
+
+
+
+            })
+            $("#green").click(function () {
+                Color = "green";
+                $("#red").css("width", "40px");
+                $("#red").css("height", "40px");
+
+                $("#blue").css("width", "40px");
+                $("#blue").css("height", "40px");
+
+                $("#green").css("width", "60px");
+                $("#green").css("height", "60px");
+
+                $("#yellow").css("width", "40px");
+                $("#yellow").css("height", "40px");
+
+                $("#lime").css("width", "40px");
+                $("#lime").css("height", "40px");
+
+                $("#black").css("width", "40px");
+                $("#black").css("height", "40px");
+
+                $("#violet").css("width", "40px");
+                $("#violet").css("height", "40px");
+
+                $("#white").css("width", "40px");
+                $("#white").css("height", "40px");
+
+                $("#aqua").css("width", "40px");
+                $("#aqua").css("height", "40px");
+
+
+
+            })
+            $("#yellow").click(function () {
+                Color = "yellow";
+
+                $("#red").css("width", "40px");
+                $("#red").css("height", "40px");
+
+                $("#blue").css("width", "40px");
+                $("#blue").css("height", "40px");
+
+
+                $("#green").css("width", "40px");
+                $("#green").css("height", "40px");
+
+                $("#yellow").css("width", "60px");
+                $("#yellow").css("height", "60px");
+
+                $("#lime").css("width", "40px");
+                $("#lime").css("height", "40px");
+
+                $("#black").css("width", "40px");
+                $("#black").css("height", "40px");
+
+                $("#violet").css("width", "40px");
+                $("#violet").css("height", "40px");
+
+                $("#white").css("width", "40px");
+                $("#white").css("height", "40px");
+
+                $("#aqua").css("width", "40px");
+                $("#aqua").css("height", "40px");
+
+
+
+            })
+            $("#lime").click(function () {
+                Color = "lime";
+
+                $("#red").css("width", "40px");
+                $("#red").css("height", "40px");
+
+                $("#blue").css("width", "40px");
+                $("#blue").css("height", "40px");
+
+
+                $("#green").css("width", "40px");
+                $("#green").css("height", "40px");
+
+                $("#yellow").css("width", "40px");
+                $("#yellow").css("height", "40px");
+
+                $("#lime").css("width", "60px");
+                $("#lime").css("height", "60px");
+
+                $("#black").css("width", "40px");
+                $("#black").css("height", "40px");
+
+                $("#violet").css("width", "40px");
+                $("#violet").css("height", "40px");
+
+                $("#white").css("width", "40px");
+                $("#white").css("height", "40px");
+
+                $("#aqua").css("width", "40px");
+                $("#aqua").css("height", "40px");
+
+
+
+            })
+            $("#black").click(function () {
+                Color = "black";
+
+                $("#red").css("width", "40px");
+                $("#red").css("height", "40px");
+
+                $("#blue").css("width", "40px");
+                $("#blue").css("height", "40px");
+
+                $("#green").css("width", "40px");
+                $("#green").css("height", "40px");
+
+                $("#yellow").css("width", "40px");
+                $("#yellow").css("height", "40px");
+
+                $("#lime").css("width", "40px");
+                $("#lime").css("height", "40px");
+
+                $("#black").css("width", "60px");
+                $("#black").css("height", "60px");
+
+                $("#violet").css("width", "40px");
+                $("#violet").css("height", "40px");
+
+                $("#white").css("width", "40px");
+                $("#white").css("height", "40px");
+
+                $("#aqua").css("width", "40px");
+                $("#aqua").css("height", "40px");
+
+
+
+            })
+            $("#violet").click(function () {
+                Color = "violet";
+
+                $("#red").css("width", "40px");
+                $("#red").css("height", "40px");
+
+                $("#blue").css("width", "40px");
+                $("#blue").css("height", "40px");
+
+
+                $("#green").css("width", "40px");
+                $("#green").css("height", "40px");
+
+                $("#yellow").css("width", "40px");
+                $("#yellow").css("height", "40px");
+
+                $("#lime").css("width", "40px");
+                $("#lime").css("height", "40px");
+
+                $("#black").css("width", "40px");
+                $("#black").css("height", "40px");
+
+                $("#violet").css("width", "60px");
+                $("#violet").css("height", "60px");
+
+                $("#white").css("width", "40px");
+                $("#white").css("height", "40px");
+
+                $("#aqua").css("width", "40px");
+                $("#aqua").css("height", "40px");
+
+
+
+            })
+            $("#white").click(function () {
+                Color = "white";
+
+                $("#red").css("width", "40px");
+                $("#red").css("height", "40px");
+
+                $("#blue").css("width", "40px");
+                $("#blue").css("height", "40px");
+
+
+                $("#green").css("width", "40px");
+                $("#green").css("height", "40px");
+
+                $("#yellow").css("width", "40px");
+                $("#yellow").css("height", "40px");
+
+                $("#lime").css("width", "40px");
+                $("#lime").css("height", "40px");
+
+                $("#black").css("width", "40px");
+                $("#black").css("height", "40px");
+
+                $("#violet").css("width", "40px");
+                $("#violet").css("height", "40px");
+
+                $("#white").css("width", "60px");
+                $("#white").css("height", "60px");
+
+                $("#aqua").css("width", "40px");
+                $("#aqua").css("height", "40px");
+
+
+            })
+            $("#aqua").click(function () {
+                Color = "aqua";
+
+                $("#red").css("width", "40px");
+                $("#red").css("height", "40px");
+
+                $("#blue").css("width", "40px");
+                $("#blue").css("height", "40px");
+
+
+                $("#green").css("width", "40px");
+                $("#green").css("height", "40px");
+
+                $("#yellow").css("width", "40px");
+                $("#yellow").css("height", "40px");
+
+                $("#lime").css("width", "40px");
+                $("#lime").css("height", "40px");
+
+                $("#black").css("width", "40px");
+                $("#black").css("height", "40px");
+
+                $("#violet").css("width", "40px");
+                $("#violet").css("height", "40px");
+
+                $("#white").css("width", "40px");
+                $("#white").css("height", "40px");
+
+                $("#aqua").css("width", "60px");
+                $("#aqua").css("height", "60px");
+
+
+
+            })
+
+            $("#myList").on("click", "li", function () {
+
+            });
+            //-------AJAX-------------------AJAX------------------------AJAX----------------AJAX---------------------AJAX---------AJAX-----------------AJAX------------------
+            $("#b4").click(function () {
+                imie = "";
+                navigator.notification.vibrate(500);
+                imie = prompt("PODAJ SWOJE IMIĘ:")
+                var sendTab = [];
+                var czas = new Date();
+                var data = czas.getDate() + "-" + czas.getMonth() + "-" + czas.getFullYear() + " " + czas.getHours() + ":" + czas.getMinutes() + ":" + czas.getSeconds();
+                //loader
+                //alert(data);
+                $.mobile.showPageLoadingMsg();
+
+                var sendTab = [];
+                sendTab.push(imie, Color, data);
+                for (var i = 0; i < tab.length - 1; i++) {
+                    sendTab.push([tab[i].lat, tab[i].lng, tab[i].zoom])
+
+                } JSON.stringify(sendTab);
+                var sendObj = {
+                    trasa: JSON.stringify(sendTab)
+                }
+                $.ajax({
+                    type: "POST",
+                    url: "http://3ib2.spec.pl.hostingasp.pl/Paciorek_Jacek/MyTrips/ZapisPlik.aspx",
+                    data: sendObj,
+                    dataType: "text",
+                    success: function (response) {
+                        $.mobile.hidePageLoadingMsg();
+                        navigator.notification.alert(response,null,"Odpowiedź z serwera","OK");
+                        //alert(response);
+                    },
+                    error: function (xhr) {
+                        alert(xhr.responseText);
+                    }
+                })
+
+            })
+        });
+
+    </script>
+</body>
+</html>
